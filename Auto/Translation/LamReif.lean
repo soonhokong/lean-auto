@@ -1,6 +1,7 @@
 module
 
 public import Lean
+public import Lean.Meta.Native
 public import Auto.Lib.MonadUtils
 public import Auto.Lib.ExprExtra
 public import Auto.Lib.MetaExtra
@@ -1817,8 +1818,11 @@ section BuildChecker
         (Lean.mkConst lvtNativeName) (Lean.mkConst litNativeName) (Lean.mkConst ifNativeName)
         (Lean.mkConst csNativeName) vExpr (Lean.toExpr lctx) (Lean.toExpr t)
       let heqNativeName ← mkNativeAuxDecl `lam_ssrefl_hEq (Lean.mkConst ``Bool) heqBoolExpr
-      let heqRflPrf ← Meta.mkEqRefl (toExpr true)
-      let heqExpr := mkApp3 (Lean.mkConst ``Lean.ofReduceBool) (Lean.mkConst heqNativeName) (toExpr true) heqRflPrf
+      -- `Lean.ofReduceBool` is gone; `nativeEqTrue` evaluates the checker and asserts the result
+      -- as an auxiliary axiom, as `native_decide` does
+      let heqExpr ← match ← Meta.nativeEqTrue `auto (Lean.mkConst heqNativeName) with
+        | .success prf => pure prf
+        | .notTrue => throwError "{decl_name%} :: The checker evaluated to `false`"
       let getEntry := Lean.mkAppN (.const ``Checker.getValidExport_indirectReduce_reflection [u])
         #[cpvFVarExpr, itExpr, csExpr, vExpr, ifExpr, hImportExpr,
           lvtExpr, litExpr, hLvtExpr, hLitExpr, Lean.toExpr lctx, Lean.toExpr t, heqExpr]

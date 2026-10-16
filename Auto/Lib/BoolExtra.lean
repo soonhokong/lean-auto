@@ -49,25 +49,17 @@ theorem Bool.ofProp_spec' (c : Prop) : Bool.ofProp c = false ↔ ¬ c := by
 
 attribute [irreducible] Bool.ofProp
 
-theorem Bool.ite_eq_true (p : Prop) [inst : Decidable p] (a b : α) : p → ite p a b = a := by
-  intro hp; dsimp [ite]; cases inst
-  case isFalse hnp => apply False.elim (hnp hp)
-  case isTrue _ => rfl
+theorem Bool.ite_eq_true (p : Prop) [inst : Decidable p] (a b : α) : p → ite p a b = a :=
+  fun hp => ite_eq_left hp
 
-theorem Bool.ite_eq_false (p : Prop) [inst : Decidable p] (a b : α) : ¬ p → ite p a b = b := by
-  intro hnp; dsimp [ite]; cases inst
-  case isFalse _ => rfl
-  case isTrue hp => apply False.elim (hnp hp)
+theorem Bool.ite_eq_false (p : Prop) [inst : Decidable p] (a b : α) : ¬ p → ite p a b = b :=
+  fun hnp => ite_eq_right hnp
 
-theorem Bool.dite_eq_true (p : Prop) [inst : Decidable p] (a : p → α) (b : ¬ p → α) (proof : p) : dite p a b = a proof := by
-  dsimp [dite]; cases inst
-  case isFalse hnp => apply False.elim (hnp proof)
-  case isTrue _ => rfl
+theorem Bool.dite_eq_true (p : Prop) [inst : Decidable p] (a : p → α) (b : ¬ p → α) (proof : p) : dite p a b = a proof :=
+  dite_eq_left proof
 
-theorem Bool.dite_eq_false (p : Prop) [inst : Decidable p] (a : p → α) (b : ¬ p → α) (proof : ¬ p) : dite p a b = b proof := by
-  dsimp [dite]; cases inst
-  case isFalse _ => rfl
-  case isTrue hp => apply False.elim (proof hp)
+theorem Bool.dite_eq_false (p : Prop) [inst : Decidable p] (a : p → α) (b : ¬ p → α) (proof : ¬ p) : dite p a b = b proof :=
+  dite_eq_right proof
 
 /--
   Similar to `ite`, but does not have complicated dependent types
